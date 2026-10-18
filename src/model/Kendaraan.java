@@ -1,52 +1,84 @@
 package model;
 
+/*
 public class Kendaraan {
-    private final String platNomor;
-    private final String merk;
-    private final String jenis;
-    private final long tarifPerHari;
-    private boolean aktif = true;
+        private final String platNomor;
+        private final String merk;
+        private final String jenis;
+        private final long tarifPerHari;
+        private boolean tersedia = true;
 
-    public Kendaraan(String platNomor, String merk, String jenis, long tarifPerHari) {
-        this.platNomor = platNomor;
-        this.merk = merk;
-        this.jenis = jenis;
-        this.tarifPerHari = tarifPerHari;
-    }
-
-    public long hitungBiayaSewa(int hari) {
-        long totalBiaya = tarifPerHari * hari;
-        if (jenis.equals("MOBIL")){
-            totalBiaya += 50000; 
-        }else if (jenis.equals("MOTOR")){
-            if (hari > 7) {
-                totalBiaya = totalBiaya / 10;
-            }
+        public Kendaraan (
+                String platNomor, 
+                String merk, 
+                String jenis, 
+                long tarifPerHari
+        ) {
+                this.platNomor = platNomor;
+                this.merk = merk;
+                this.jenis = jenis;
+                this.tarifPerHari = tarifPerHari;
         }
-        return totalBiaya;
-    }
+        //[BELUM OCP] if-else per jenis masih ada disini
+        //setiap ada jenis baru -> kelas ini harus diubah 
+        public long hitungBiaya(int hari) {
+                long total = tarifPerHari * hari;
 
-    public String getPlatNomor() {
-        return platNomor;
-    }
+                if (jenis.equals("MOBIL")) {
+                        total += 50000; //Asuransi
+                } else if(jenis.equals("MOTOR")) {
+                        if (hari >= 7) total -= total / 10; //Diskon 10%
+                }
+                return total;
+        }
 
-    public String getMerk() {
-        return merk;
-    }
+        public String getPlatNomor() {
+                return platNomor;
+        }
+        public String getMerk() {
+                return merk;
+        }
+        public String getJenis() {
+                return jenis;
+        }
+        public long getTarifPerHari() {
+                return tarifPerHari;
+        } 
+        public boolean isTersedia() {
+                return tersedia;
+        }
+        public void setTersedia(boolean tersedia) {
+                this.tersedia = tersedia;
+        }
+}
+*/
 
-    public String getJenis() {
-        return jenis;
-    }
+//[SRP] + [OCP]:
+//Kelas dibuat abstract secara tertutup untuk modifikasi (jadi tidak lagi blok if-else untuk menentukan jenis objeknya),
+//dengan abstract sifatnya jadi terbuka untuk di extend, jika ada jenis baru maka subclass baru.
+public abstract class Kendaraan {
+        private final String platNomor;
+        private final String merk;
+        private final long tarifPerHari;
+        private boolean tersedia = true;
 
-    public long getTarifPerHari() {
-        return tarifPerHari;
-    }
+        public Kendaraan(String platNomor, String merk, long tarifPerHari) {
+                this.platNomor = platNomor;
+                this.merk = merk;
+                this.tarifPerHari = tarifPerHari;
+        }
 
-    public boolean isAktif() {
-        return aktif;
-    }
+        public abstract String getJenis();
 
-    public void setTersedia(boolean tersedia) {
-        this.aktif = tersedia;
-    }
+        public abstract long hitungBiaya(int hari);
+
+        public int getMinimalHari() {
+                return 1;
+        }
+
+        public String getPlatNomor() { return platNomor; }
+        public String getMerk() { return merk; }
+        public long getTarifPerHari() { return tarifPerHari; }
+        public boolean isTersedia() { return tersedia; }
+        public void setTersedia(boolean tersedia) { this.tersedia = tersedia; }
 }

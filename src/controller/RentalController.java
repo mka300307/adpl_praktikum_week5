@@ -1,113 +1,96 @@
 package controller;
-
-import java.util.Locale;
-import model.KendaraanRepository;
-import model.PenyewaanRepository;
+  
+import java.util.List;
 import model.Kendaraan;
+import model.KendaraanFactory;
+import model.KendaraanRepository;
 import model.Penyewaan;
-import view.StrukView;
+import model.PenyewaanRepository;
 import view.RentalView;
+import view.StrukView;
 
 public class RentalController {
-    private final KendaraanRepository kendaraanRepo = new KendaraanRepository();
-    private final PenyewaanRepository penyewaanRepo = new PenyewaanRepository();
-    private final RentalView rentalView = new RentalView();
-    private final StrukView strukView = new StrukView();
+        private final KendaraanRepository kendaraanRepo = new KendaraanRepository();
+        private final PenyewaanRepository penyewaanRepo = new PenyewaanRepository();
+        private final RentalView view = new RentalView();
+        private final StrukView struktView = new StrukView();
 
-    public void dataAwal(Kendaraan kendaraan) {
-        kendaraanRepo.tambahKendaraan(kendaraan);
-    }
-
-    public void tambahKendaraan() {
-        String platNomor = rentalView.bacaTeks("Masukkan plat nomor: ");
-        if(platNomor.isEmpty() || kendaraanRepo.cariByPlat(platNomor) != null){
-            rentalView.tampilkanPesan("Plat nomor tidak boleh kosong atau sudah ada.");
-            return;
-        }
-        String merk = rentalView.bacaTeks("Masukkan merk: ");
-        String jenis = rentalView.bacaTeks("Masukkan jenis: ").trim().toUpperCase(Locale.ROOT);
-        if(!jenis.equals("MOTOR") && !jenis.equals("MOBIL")){
-            rentalView.tampilkanPesan("Jenis tidak dikenali. Harus MOTOR atau MOBIL.");
-            return;
-        }   
-        long tarifPerHari = rentalView.bacaAngka("Masukkan tarif per hari: ");
-        if(tarifPerHari <= 0){
-            rentalView.tampilkanPesan("Tarif per hari harus lebih dari 0.");
-            return;
-        }
-        kendaraanRepo.tambahKendaraan(new Kendaraan(platNomor, merk, jenis, tarifPerHari));
-        rentalView.tampilkanPesan("Kendaraan berhasil ditambahkan.");
-    }
-
-    public void sewaKendaraan() {
-        String platNomorUpper = rentalView.bacaTeks("Masukkan plat nomor kendaraan yang ingin disewa: ").toUpperCase();
-        Kendaraan kendaraan = kendaraanRepo.cariByPlat(platNomorUpper);
-        if (kendaraan == null || !kendaraan.isAktif()) {
-            rentalView.tampilkanPesan("Kendaraan tidak tersedia untuk disewa.");
-            return;
-        }
-        String namaPenyewa = rentalView.bacaTeks("Masukkan nama penyewa: ");
-        int lamaHari = (int) rentalView.bacaAngka("Masukkan lama sewa (hari): ");
-        if (lamaHari < 1) {
-            rentalView.tampilkanPesan("Lama sewa minimal 1 hari.");
-            return;
+        public void tambahDataAwal(Kendaraan kendaraan) {
+                kendaraanRepo.tambah(kendaraan);
         }
 
-        Long totalBiaya = kendaraan.hitungBiayaSewa(lamaHari);
-        Penyewaan penyewaan = new Penyewaan(
-            penyewaanRepo.buatIdBaru(), 
-            namaPenyewa, 
-            kendaraan, 
-            lamaHari, 
-            totalBiaya
-        );
-        penyewaanRepo.tambahPenyewaan(penyewaan);
-        kendaraan.setTersedia(false);
-        strukView.cetak(penyewaan);
-    }
-
-    public void kembalikanKendaraan() {
-        String platNomor = rentalView.bacaTeks("Masukkan plat nomor kendaraan yang dikembalikan: ").toUpperCase();
-        Penyewaan penyewaan = penyewaanRepo.cariAktifByPlat(platNomor);
-        if (penyewaan == null) {
-            rentalView.tampilkanPesan("Tidak ada penyewaan aktif untuk kendaraan dengan plat nomor " + platNomor + ".");
-            return;
+        public void jalankan() {
+                while (true) {
+                        String pilihan = view.tampilMenu();
+                        switch (pilihan) {
+                                case "1" -> view.tampilDaftarKendaraan(kendaraanRepo.semua());
+                                case "2" -> tambahKendaraan();
+                                case "3" -> sewaKendaraan();
+                                case "4" -> kembalikanKendaraan();
+                                case "5" -> view.tampilRiwayat(penyewaanRepo.semua());
+                                case "0" -> {
+                                        view.tampilPesan("Thank You.");
+                                        return;
+                                }
+                                default -> view.tampilPesan("Menu tidak ada.");
+                        }
+                }
         }
 
-        penyewaan.selesai();
-        penyewaan.getKendaraan().setTersedia(true);
-        rentalView.tampilkanPesan("Kendaraan dengan plat nomor " + platNomor + " telah dikembalikan.");
-    }
-
-    public void tampilkanDaftarKendaraan() {
-        rentalView.tampilkanDaftarKendaraan(kendaraanRepo.getAllKendaraan());
-    }
-    
-    public void menuApp() {
-        while (true) {
-            int pilihan = (int) rentalView.tampilkanMenu();
-            switch (pilihan) {
-                case 1:
-                    tampilkanDaftarKendaraan();
-                    break;
-                case 2:
-                    tambahKendaraan();
-                    break;  
-                case 3:
-                    sewaKendaraan();
-                    break;
-                case 4:
-                    kembalikanKendaraan();
-                    break;
-                case 5:
-                    rentalView.tampilkanRiwayatPenyewaan(penyewaanRepo.getAllPenyewaan());
-                    break;
-                case 0:
-                    rentalView.tampilkanPesan("Terima kasih telah menggunakan aplikasi Rental Kendaraan.");
-                    return;
-                default:
-                    rentalView.tampilkanPesan("Pilihan tidak valid. Silakan coba lagi.");
-            }
+        public void tambahKendaraan() {
+                String plat = view.bacaTeks("Plat Nomor");
+                if (plat.isEmpty() || kendaraanRepo.cariByPlat(plat) != null) {
+                        view.tampilPesan("Plat nomor kosong atau sudah terdaftar.");
+                        return;
+                }
+                String merk = view.bacaTeks("Merk");
+                // [OCP] Daftar jenis diambil dari Factory, bukan ditulis manual di Controller.
+                String jenis = view.bacaTeks("Jenis (" + String.join("/", KendaraanFactory.JENIS) + ")").toUpperCase();
+                if (!List.of(KendaraanFactory.JENIS).contains(jenis)) {
+                view.tampilPesan("Jenis tidak dikenal.");
+                return;
+                }
+                long tarif = view.bacaAngka("Tarif per hari");
+                if (tarif <= 0) {
+                view.tampilPesan("Tarif harus lebih dari 0.");
+                return;
+                }
+                kendaraanRepo.tambah(KendaraanFactory.buat(jenis, plat, merk, tarif));
+                view.tampilPesan("Kendaraan berhasil ditambahkan.");
         }
-    }
+
+        public void sewaKendaraan() {
+                String plat = view.bacaTeks("Plat Nomor");
+                Kendaraan kendaraan = kendaraanRepo.cariByPlat(plat);
+                if (kendaraan == null || !kendaraan.isTersedia()) {
+                        System.out.println("Kendaraan tidak ditemukan atau sedang disewa.");
+                        return;
+                }
+                String nama = view.bacaTeks("Nama Penyewa");
+                int hari = (int) view.bacaAngka("Lama sewa (hari)");
+
+                if (hari < kendaraan.getMinimalHari()) {
+                        view.tampilPesan(kendaraan.getMerk() + " minimal disewa "
+                                + kendaraan.getMinimalHari() + " hari.");
+                        return;
+                }
+                
+                long total = kendaraan.hitungBiaya(hari);
+                Penyewaan sewa = new Penyewaan(plat, nama, kendaraan, hari, total);
+                penyewaanRepo.tambah(sewa);
+                kendaraan.setTersedia(false);
+                struktView.cetak(sewa);
+        }
+
+        public void kembalikanKendaraan() {
+                String plat = view.bacaTeks("Plat Nomor");
+                Penyewaan sewa = penyewaanRepo.cariAktifByPlat(plat);
+                if (sewa == null) {
+                        view.tampilPesan("Tidak ada penyewaan.");
+                        return;
+                }
+                sewa.selesai();
+                sewa.getKendaraan().setTersedia(true);
+                view.tampilPesan("Kendaraan " + sewa.getKendaraan().getMerk() + " telah dikembalikan.");
+        }
 }
